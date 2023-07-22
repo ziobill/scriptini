@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Code Decoder</title>
+    <style>
+/*        body {
+//            margin: 0;
+//            padding: 0;
+//            background: url('img/sfondo.jpg') no-repeat center center fixed;
+//            background-size: cover;
+        }
+*/
+        .qr-code-container {
+            width: 100%;
+            max-width: 5000px; /* Imposta la larghezza massima dell'immagine QR Code */
+            margin: 0 auto; /* Centra l'elemento orizzontalmente nella pagina */
+            padding: 0px; /* Aggiungi spazio intorno all'immagine per migliorare la visualizzazione */
+        }
+        .qr-code-container img {
+            width: 100%;
+            height: auto;
+            display: block; /* Per assicurarsi che l'immagine non aggiunga spazi vuoti sotto di essa */
+        }
+
+    </style>
+</head>
+<body>
+<body bgcolor="#FAFCFF">
+<center>
+    <div class="qr-code-container">
+        <img src="img/bar2.png" alt="QR Code">
+    </div>
+ <img src="img/qrcode2.png" alt="logo" width="700" height="450">
+ <br><br><p style="font-family:verdana">Upload an image of a QR Code</p>
+        <!-- Aggiungi altri contenuti qui -->
+<?php
+require __DIR__ . "/vendor/autoload.php";
+
+    use Zxing\QrReader;
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['qr_code_image'])) {
+        $targetDir = 'uploads/';
+        $targetFile = $targetDir . basename($_FILES['qr_code_image']['name']);
+        $uploadOk = 1;
+        $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+
+        // Controlla se l'immagine è effettivamente un QR code
+        $check = getimagesize($_FILES['qr_code_image']['tmp_name']);
+        if ($check !== false) {
+            $uploadOk = 1;
+        } else {
+            echo 'Uploaded File is not an image.';
+            $uploadOk = 0;
+        }
+
+        // Limita le dimensioni del file
+        if ($_FILES['qr_code_image']['size'] > 500000) {
+            echo 'File too BIG!. Max size is: 500 KB.';
+            $uploadOk = 0;
+        }
+
+        // Consentire solo determinati formati di file
+        if ($imageFileType !== 'png' && $imageFileType !== 'jpg' && $imageFileType !== 'jpeg') {
+            echo 'The file must be PNG, JPG or JPEG.';
+            $uploadOk = 0;
+        }
+
+        // Se tutto è OK, carica il file
+        if ($uploadOk) {
+            if (move_uploaded_file($_FILES['qr_code_image']['tmp_name'], $targetFile)) {
+                    // Leggi il link dal QR code
+                $qrcode = new QrReader($targetFile);
+                $link = $qrcode->text(); //return decoded text from QR Code
+
+                // Mostra il link all'utente
+                echo "<br><p style=\"font-family:verdana\"><p style=\"font-size:15px\">";
+                echo 'The link inside the QrCode is: <p>' . $link;
+                echo "</p>";
+            } else {
+                echo 'Error uploading file';
+            }
+        }
+    }
+    ?>
+
+    <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post" enctype="multipart/form-data">
+        <p><br>
+        <input type="file" name="qr_code_image" required accept=".png, .jpg, .jpeg">
+        <input type="submit" value="Upload">
+    </form>
+</center>
+</body>
+</html>
